@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>Catat Pengeluaran Rumah</title>
+<style>
+  :root {
+    --bg:#f1f5f9; --card:#ffffff; --text:#0f172a; --muted:#64748b; --line:#e2e8f0;
+    --brand:#2563eb; --brand-d:#1d4ed8; --brand-soft:#eff6ff;
+    --ok:#15803d; --ok-bg:#dcfce7; --err:#b91c1c; --err-bg:#fee2e2; --info-bg:#eff6ff;
+    --shadow:0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0b1220; --card:#141c2e; --text:#e8eefc; --muted:#94a3b8; --line:#26324a;
+      --brand:#60a5fa; --brand-d:#3b82f6; --brand-soft:#16233f;
+      --ok:#86efac; --ok-bg:#12301f; --err:#fca5a5; --err-bg:#3b1517; --info-bg:#16233f;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+         padding-bottom:104px; }
+  .wrap { max-width:520px; margin:0 auto; padding:0 16px; }
+
+  /* Header */
+  .hero { background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#0ea5e9 100%);
+          color:#fff; padding:28px 0 64px; }
+  .hero h1 { margin:0; font-size:22px; font-weight:800; letter-spacing:-.3px; }
+  .hero p { margin:6px 0 0; font-size:14px; opacity:.88; }
+  .chip { display:inline-flex; align-items:center; gap:8px; margin-top:16px; padding:8px 14px;
+          border-radius:999px; background:rgba(255,255,255,.18); backdrop-filter:blur(6px);
+          font-size:13px; font-weight:600; }
+  .chip svg { width:16px; height:16px; }
+  main { margin-top:-44px; }
+
+  /* Kartu */
+  .card { background:var(--card); border-radius:20px; padding:18px; margin-bottom:14px; box-shadow:var(--shadow); }
+  .card h2 { margin:0 0 14px; font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .step { width:22px; height:22px; border-radius:50%; background:var(--brand-soft); color:var(--brand);
+          font-size:12px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; }
+
+  /* Tombol */
+  button { font:inherit; border:0; cursor:pointer; width:100%; font-weight:700; border-radius:14px;
+           padding:15px 16px; display:flex; align-items:center; justify-content:center; gap:10px;
+           transition:transform .08s ease, box-shadow .15s ease, background .15s ease; }
+  button:active { transform:scale(.98); }
+  button:disabled { opacity:.55; cursor:not-allowed; }
+  button svg { width:20px; height:20px; flex:none; }
+  .primary { background:linear-gradient(135deg,var(--brand-d),var(--brand)); color:#fff;
+             box-shadow:0 6px 16px rgba(37,99,235,.32); }
+  .soft { background:var(--brand-soft); color:var(--brand); }
+  .link { background:transparent; color:var(--muted); font-weight:600; font-size:13px; padding:10px; margin-top:6px; }
+  .big { padding:18px 16px; font-size:16px; }
+  .row { display:flex; gap:10px; margin-top:10px; }
+
+  /* Status */
+  #status { margin-top:12px; font-size:13px; line-height:1.45; border-radius:12px; padding:0; }
+  #status:not(:empty) { padding:10px 12px; background:var(--info-bg); color:var(--brand); }
+  #status.ok { background:var(--ok-bg); color:var(--ok); }
+  #status.err { background:var(--err-bg); color:var(--err); }
+  .hint { font-size:12px; color:var(--muted); margin-top:12px; line-height:1.5; }
+  details { margin-top:10px; font-size:12px; color:var(--muted); }
+  summary { cursor:pointer; padding:4px 0; }
+  pre { white-space:pre-wrap; word-break:break-word; background:var(--bg); padding:10px; border-radius:10px; }
+  #preview { width:100%; max-height:240px; object-fit:contain; border-radius:14px; margin-top:12px;
+             display:none; background:var(--bg); }
+
+  /* Kamera langsung (eksperimental) */
+  #liveBox { display:none; margin-top:12px; }
+  #video { width:100%; border-radius:16px; background:#000; max-height:60vh; }
+  #liveStat { font-size:13px; margin-top:8px; color:var(--brand); font-weight:700; }
+  #liveText { font-size:11px; color:var(--muted); max-height:70px; overflow:hidden; white-space:pre-wrap; word-break:break-word; margin-top:6px; }
+
+  /* Form */
+  label { display:block; font-size:12px; font-weight:600; color:var(--muted); margin:14px 0 6px; }
+  input, select { width:100%; font:inherit; font-size:16px; padding:13px 14px; color:var(--text);
+                  background:var(--bg); border:1.5px solid transparent; border-radius:14px; outline:none;
+                  transition:border-color .15s, background .15s; appearance:none; -webkit-appearance:none; }
+  input::placeholder { color:var(--muted); opacity:.7; }
+  input:focus, select:focus { border-color:var(--brand); background:var(--card); }
+  select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+           background-repeat:no-repeat; background-position:right 14px center; padding-right:40px; }
+  .money { position:relative; }
+  .money span { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-weight:700; color:var(--muted); }
+  .money input { padding-left:46px; font-size:22px; font-weight:800; letter-spacing:-.3px; }
+
+  /* Bar simpan menempel di bawah */
+  .savebar { position:fixed; left:0; right:0; bottom:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+             background:color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter:blur(12px);
+             border-top:1px solid var(--line); }
+  .savebar .in { max-width:520px; margin:0 auto; }
+
+  .hero .wrap { position:relative; }
+  .gear { position:absolute; right:16px; top:0; width:42px; height:42px; padding:0; border-radius:50%;
+          background:rgba(255,255,255,.18); color:#fff; }
+  .gear svg { width:20px; height:20px; }
+  #settings { display:none; }
+  #setMsg { font-size:13px; margin-top:10px; color:var(--err); }
+</style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <button class="gear" id="btnGear" aria-label="Pengaturan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <h1>Catat Pengeluaran Rumah</h1>
+      <p>Foto nota, cek hasilnya, lalu simpan.</p>
+      <div class="chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        <span id="totalInfo">Memuat total...</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card" id="settings">
+      <h2>Pengaturan (sekali saja)</h2>
+      <label for="apiUrl" style="margin-top:0">Link Apps Script (berakhiran /exec)</label>
+      <input type="url" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      <label for="apiPin">PIN</label>
+      <input type="password" id="apiPin" placeholder="PIN yang kamu tulis di Code.gs">
+      <div style="height:14px"></div>
+      <button class="primary" id="btnSaveSet">Simpan pengaturan</button>
+      <div id="setMsg"></div>
+      <div class="hint">Disimpan hanya di browser HP ini, tidak dikirim ke GitHub.</div>
+    </section>
+    <section class="card">
+      <h2><span class="step">1</span>Scan nota</h2>
+      <button class="primary big" id="btnCam">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Foto nota
+      </button>
+      <div class="row">
+        <button class="soft" id="btnGal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          Pilih dari galeri
+        </button>
+      </div>
+      <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+      <input type="file" id="fileGal" accept="image/*" hidden>
+      <img id="preview" alt="Pratinjau nota">
+      <div id="status"></div>
+      <div class="hint">Nota cetak biasanya terbaca bagus. Tulisan tangan sering meleset, jadi selalu cek angkanya.</div>
+      <details><summary>Lihat teks hasil scan</summary><pre id="rawText">-</pre></details>
+
+      <button class="soft" id="btnLive" style="margin-top:10px">Kamera langsung (baca teks real-time)</button>
+      <div id="liveBox">
+        <video id="video" playsinline muted></video>
+        <canvas id="cv" hidden></canvas>
+        <div id="liveStat">-</div>
+        <div id="liveText"></div>
+        <div class="row">
+          <button class="primary" id="btnShot">Tangkap &amp; simpan foto</button>
+          <button class="soft" id="btnStop">Tutup</button>
+        </div>
+        <div class="hint">Arahkan ke bagian TOTAL dan dekatkan sampai tulisan jelas. Isian yang sudah kamu ketik sendiri tidak ditimpa.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">2</span>Detail pengeluaran</h2>
+
+      <label for="jumlah" style="margin-top:0">Jumlah</label>
+      <div class="money"><span>Rp</span><input type="number" id="jumlah" inputmode="numeric" placeholder="0"></div>
+
+      <label for="ket">Keterangan (beli apa)</label>
+      <input type="text" id="ket" placeholder="contoh: Semen 40 sak">
+
+      <label for="kat">Kategori</label>
+      <select id="kat"></select>
+
+      <label for="toko">Toko / penerima</label>
+      <input type="text" id="toko" placeholder="contoh: TB Maju Jaya">
+
+      <label for="date">Tanggal</label>
+      <input type="date" id="date">
+
+      <label for="metode">Metode bayar</label>
+      <select id="metode"></select>
+
+      <label for="catatan">Catatan (opsional)</label>
+      <input type="text" id="catatan">
+    </section>
+  </main>
+
+  <div class="savebar"><div class="in">
+    <button class="primary big" id="btnSave">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      Simpan
+    </button>
+  </div></div>
+
+<script>
+  /* Penghubung ke Apps Script (pengganti google.script.run) */
+  function lsGet(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  async function api(action, payload) {
+    var url = lsGet('apiUrl'), pin = lsGet('pin');
+    if (!url || !pin) throw new Error('Isi pengaturan dulu (link /exec dan PIN) lewat ikon gerigi.');
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ pin: pin, action: action, payload: payload || {} })
+    });
+    var j = await res.json();
+    if (!j.ok) throw new Error(j.error || 'Gagal');
+    return j.data;
+  }
+  var google = { script: { run: (function () {
+    function make(ok, fail) {
+      var o = {
+        withSuccessHandler: function (f) { return make(f, fail); },
+        withFailureHandler: function (f) { return make(ok, f); }
+      };
+      ['getConfig', 'ocrReceipt', 'savePhoto', 'saveTransaction'].forEach(function (name) {
+        o[name] = function (arg) {
+          var payload = (name === 'ocrReceipt' || name === 'savePhoto') ? { b64: arg } : (name === 'saveTransaction' ? arg : {});
+          api(name, payload).then(function (d) { if (ok) ok(d); }).catch(function (e) { if (fail) fail(e); });
+        };
+      });
+      return o;
+    }
+    return make(null, null);
+  })() } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script>
+  var photoUrl = '';
+  var dirty = {};
+  var worker = null, stream = null, loopTimer = null, busy = false, lastTotal = 0;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function today() {
+    var d = new Date();
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+  function rp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+  function setStatus(msg, cls) { var s = $('status'); s.textContent = msg; s.className = cls || ''; }
+  function setLive(msg) { $('liveStat').textContent = msg; }
+
+  function fillSelect(el, items, firstBlank) {
+    el.innerHTML = '';
+    if (firstBlank) { var o = document.createElement('option'); o.value = ''; o.textContent = '-- pilih --'; el.appendChild(o); }
+    items.forEach(function (t) { var o = document.createElement('option'); o.value = t; o.textContent = t; el.appendChild(o); });
+  }
+
+  // tandai isian yang diketik manual supaya tidak ditimpa hasil kamera
+  ['date', 'ket', 'toko', 'jumlah', 'metode', 'catatan'].forEach(function (id) {
+    $(id).addEventListener('input', function () { dirty[id] = true; });
+  });
+
+  function resetForm() {
+    $('date').value = today();
+    ['ket', 'toko', 'jumlah', 'catatan'].forEach(function (id) { $(id).value = ''; });
+    $('kat').value = ''; photoUrl = ''; dirty = {}; lastTotal = 0;
+    $('preview').style.display = 'none'; $('rawText').textContent = '-';
+  }
+
+  google.script.run.withSuccessHandler(function (cfg) {
+    fillSelect($('kat'), cfg.cats, true);
+    fillSelect($('metode'), cfg.pays, false);
+    $('date').value = today();
+    $('totalInfo').textContent = 'Total tercatat: ' + rp(cfg.total);
+  }).withFailureHandler(function (e) { setStatus('Gagal memuat data: ' + e.message, 'err'); }).getConfig();
+
+  /* ---------- Parser teks nota (di dalam browser) ---------- */
+  var NUM_RE = /\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{1,2})?|\d+/g;
+  function toNumber(s) {
+    s = String(s).replace(/\s/g, '');
+    if (/[.,]\d{1,2}$/.test(s)) s = s.replace(/[.,]\d{1,2}$/, '');
+    return parseInt(s.replace(/[.,]/g, ''), 10) || 0;
+  }
+  function numbersIn(line) {
+    return (line.match(NUM_RE) || []).map(toNumber).filter(function (n) { return n >= 500; });
+  }
+  function findTotal(lines) {
+    var KEY = /(grand\s*total|total|jumlah|tagihan|harus\s*dibayar|netto)/i, SKIP = /kembali|kembalian|change/i, best = 0;
+    for (var i = 0; i < lines.length; i++) {
+      if (!KEY.test(lines[i]) || SKIP.test(lines[i])) continue;
+      var nums = numbersIn(lines[i]);
+      if (!nums.length && lines[i + 1]) nums = numbersIn(lines[i + 1]);
+      nums.forEach(function (n) { if (n > best) best = n; });
+    }
+    return best;   // di mode langsung hanya baris bertanda TOTAL yang dipakai
+  }
+  function findDate(text) {
+    var MONTHS = { jan:1, feb:2, mar:3, apr:4, mei:5, may:5, jun:6, jul:7, agu:8, ags:8, aug:8, sep:9, okt:10, oct:10, nov:11, des:12, dec:12 };
+    function fmt(y, mo, d) {
+      if (y < 100) y += 2000;
+      if (y < 2000 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+      return y + '-' + ('0' + mo).slice(-2) + '-' + ('0' + d).slice(-2);
+    }
+    var m = text.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+    if (m) { var r = fmt(+m[3], +m[2], +m[1]); if (r) return r; }
+    m = text.match(/(\d{1,2})\s+([A-Za-z]{3,})\.?\s+(\d{2,4})/);
+    if (m) { var mo = MONTHS[m[2].toLowerCase().slice(0, 3)]; if (mo) { var r2 = fmt(+m[3], mo, +m[1]); if (r2) return r2; } }
+    return '';
+  }
+  function findStore(lines) {
+    var l = lines.filter(function (x) { return /[A-Za-z]{3,}/.test(x); })[0];
+    return l ? l.slice(0, 40) : '';
+  }
+
+  /* ---------- Kamera langsung + baca teks real-time ---------- */
+  $('btnLive').onclick = startLive;
+  $('btnStop').onclick = stopLive;
+
+  async function startLive() {
+    $('liveBox').style.display = 'block'; $('btnLive').style.display = 'none';
+    setLive('Menyalakan kamera...'); setStatus('');
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
+      });
+    } catch (e) {
+      stopLive();
+      setStatus('Kamera langsung tidak bisa dibuka di sini (' + (e.name || 'error') + '). Pakai tombol "Foto nota" saja.', 'err');
+      return;
+    }
+    var v = $('video'); v.srcObject = stream;
+    try { await v.play(); } catch (e) {}
+    setLive('Memuat mesin baca teks (pertama kali agak lama)...');
+    try {
+      if (!worker) worker = await Tesseract.createWorker('ind');
+    } catch (e) {
+      stopLive();
+      setStatus('Mesin baca teks gagal dimuat (' + (e.message || e) + '). Pakai tombol "Foto nota" saja.', 'err');
+      return;
+    }
+    setLive('Arahkan kamera ke nota...');
+    loop();
+  }
+
+  async function loop() {
+    if (!stream) return;
+    var v = $('video');
+    if (!busy && v.videoWidth) {
+      busy = true;
+      try {
+        var c = $('cv'), s = Math.min(1, 1000 / v.videoWidth);
+        c.width = Math.round(v.videoWidth * s); c.height = Math.round(v.videoHeight * s);
+        var x = c.getContext('2d');
+        x.filter = 'grayscale(1) contrast(1.4)';
+        x.drawImage(v, 0, 0, c.width, c.height);
+        var r = await worker.recognize(c);
+        applyText(r.data.text || '');
+      } catch (e) {}
+      busy = false;
+    }
+    if (stream) loopTimer = setTimeout(loop, 300);
+  }
+
+  function applyText(text) {
+    var lines = text.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(String);
+    $('liveText').textContent = lines.slice(0, 6).join('\n');
+    var total = findTotal(lines), date = findDate(text), store = findStore(lines), got = [];
+    if (total && !dirty.jumlah) {
+      if (total === lastTotal) { $('jumlah').value = total; got.push('total ' + rp(total)); }   // dipakai bila terbaca sama 2x
+      lastTotal = total;
+    }
+    if (date && !dirty.date) { $('date').value = date; got.push('tanggal'); }
+    if (store && !dirty.toko && !$('toko').value) { $('toko').value = store; got.push('toko'); }
+    setLive(got.length ? 'Terbaca: ' + got.join(', ') : (total ? 'Menunggu angka stabil...' : 'Mencari tulisan TOTAL...'));
+  }
+
+  function stopLive() {
+    clearTimeout(loopTimer); loopTimer = null;
+    if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+    $('liveBox').style.display = 'none'; $('btnLive').style.display = 'block';
+  }
+
+  $('btnShot').onclick = function () {
+    var v = $('video');
+    if (!v.videoWidth) { setStatus('Kamera belum siap.', 'err'); return; }
+    var s = Math.min(1, 1600 / Math.max(v.videoWidth, v.videoHeight));
+    var c = document.createElement('canvas');
+    c.width = Math.round(v.videoWidth * s); c.height = Math.round(v.videoHeight * s);
+    c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+    var dataUrl = c.toDataURL('image/jpeg', 0.85);
+    stopLive();
+    var pv = $('preview'); pv.src = dataUrl; pv.style.display = 'block';
+    setStatus('Menyimpan foto sebagai bukti...');
+    google.script.run
+      .withSuccessHandler(function (url) { photoUrl = url; setStatus('Foto tersimpan. Cek isian, pilih kategori, lalu Simpan.', 'ok'); })
+      .withFailureHandler(function (e) { setStatus('Foto gagal disimpan: ' + e.message + ' (data tetap bisa disimpan tanpa foto)', 'err'); })
+      .savePhoto(dataUrl.split(',')[1]);
+  };
+
+  /* ---------- Foto biasa (dibaca Google Drive OCR) ---------- */
+  $('btnCam').onclick = function () { $('fileCam').click(); };
+  $('btnGal').onclick = function () { $('fileGal').click(); };
+  $('fileCam').onchange = $('fileGal').onchange = function (e) {
+    var f = e.target.files[0]; e.target.value = '';
+    if (f) handleFile(f);
+  };
+
+  function shrink(file, cb) {
+    var img = new Image(), url = URL.createObjectURL(file);
+    img.onload = function () {
+      var max = 1600, s = Math.min(1, max / Math.max(img.width, img.height));
+      var c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      var dataUrl = c.toDataURL('image/jpeg', 0.85);
+      URL.revokeObjectURL(url);
+      cb(dataUrl);
+    };
+    img.onerror = function () { setStatus('Foto tidak bisa dibuka.', 'err'); };
+    img.src = url;
+  }
+
+  function handleFile(file) {
+    stopLive();
+    setStatus('Membaca nota... (sekitar 5-15 detik)');
+    $('btnCam').disabled = $('btnGal').disabled = true;
+    shrink(file, function (dataUrl) {
+      var pv = $('preview'); pv.src = dataUrl; pv.style.display = 'block';
+      google.script.run
+        .withSuccessHandler(function (r) {
+          $('btnCam').disabled = $('btnGal').disabled = false;
+          photoUrl = r.photoUrl || '';
+          $('rawText').textContent = r.text || '(tidak ada teks terbaca)';
+          if (r.total) $('jumlah').value = r.total;
+          if (r.date) $('date').value = r.date;
+          if (r.store) $('toko').value = r.store;
+          if (r.ocrError) setStatus('Foto tersimpan, tapi scan gagal. Isi manual. (' + r.ocrError.slice(0, 120) + ')', 'err');
+          else if (!r.text) setStatus('Tidak ada teks terbaca. Coba foto lebih terang dan lurus, atau isi manual.', 'err');
+          else setStatus('Selesai dibaca. Cek jumlah, tanggal, dan toko, lalu pilih kategori.', 'ok');
+        })
+        .withFailureHandler(function (e) {
+          $('btnCam').disabled = $('btnGal').disabled = false;
+          setStatus('Gagal: ' + e.message, 'err');
+        })
+        .ocrReceipt(dataUrl.split(',')[1]);
+    });
+  }
+
+  /* ---------- Simpan ---------- */
+  $('btnSave').onclick = function () {
+    if (!$('kat').value) { setStatus('Pilih kategori dulu.', 'err'); return; }
+    var cat = $('catatan').value.trim();
+    var data = {
+      date: $('date').value, keterangan: $('ket').value.trim(), kategori: $('kat').value,
+      toko: $('toko').value.trim(), jumlah: $('jumlah').value, metode: $('metode').value,
+      catatan: (cat + (photoUrl ? (cat ? ' | ' : '') + 'Foto: ' + photoUrl : '')).trim()
+    };
+    $('btnSave').disabled = true; setStatus('Menyimpan...');
+    google.script.run
+      .withSuccessHandler(function (r) {
+        $('btnSave').disabled = false;
+        $('totalInfo').textContent = 'Total tercatat: ' + rp(r.total);
+        resetForm();
+        setStatus('Tersimpan di baris ' + r.row + '. Siap nota berikutnya.', 'ok');
+        window.scrollTo(0, 0);
+      })
+      .withFailureHandler(function (e) { $('btnSave').disabled = false; setStatus('Gagal simpan: ' + e.message, 'err'); })
+      .saveTransaction(data);
+  };
+</script>
+<script>
+  (function () {
+    var g = function (i) { return document.getElementById(i); };
+    var panel = g('settings');
+    g('apiUrl').value = lsGet('apiUrl'); g('apiPin').value = lsGet('pin');
+    if (!lsGet('apiUrl') || !lsGet('pin')) panel.style.display = 'block';
+    g('btnGear').onclick = function () { panel.style.display = (panel.style.display === 'block') ? 'none' : 'block'; };
+    g('btnSaveSet').onclick = function () {
+      var u = g('apiUrl').value.trim(), p = g('apiPin').value.trim();
+      if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(u)) { g('setMsg').textContent = 'Link harus diawali https://script.google.com/macros/s/ dan berakhiran /exec'; return; }
+      if (!p) { g('setMsg').textContent = 'PIN belum diisi.'; return; }
+      lsSet('apiUrl', u); lsSet('pin', p); location.reload();
+    };
+  })();
+</script>
+</body>
+</html>
